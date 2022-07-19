@@ -24,16 +24,17 @@ def loggedIn():
 @app.route( '/user/process_login', methods = [ 'POST' ] )
 def process_login():
     is_valid = User.validate_login( request.form )
+    current_user = User.get_one( request.form )
     if is_valid == False:
         return redirect( '/' )
     else:
-        current_user = User.get_one( request.form )
-        print( 'CURRENT USER ======', current_user)
-        if current_user != False:
+        if is_valid != False:
             if not bcrypt.check_password_hash( current_user.password, request.form['password'] ):
                 flash( "Invalid credentials", "error_login_invalid_credentials" )
                 return redirect( '/' )
             session[ 'logged_user' ] = current_user.id
+            session[ 'first_name' ] = current_user.first_name
+            print( session )
             return redirect( '/logged' )
 
 @app.route( '/user/process_registration', methods = [ 'POST' ] )
@@ -53,6 +54,7 @@ def process_registration():
     user_id = User.create_one( user_data )
     if user_id != False:
         session[ 'logged_user' ] = user_id
+        session[ 'first_name' ] = user_data.first_name
         return redirect( '/logged' )
     else:
         flash( "Something went wrong with the query", "error_registration_query" )
